@@ -132,7 +132,7 @@ namespace Microsoft.Diagnostics.Runtime.Linux
                 bytesRead = _memoryStream.Read(buffer, 0, readableBytesCount);
                 return bytesRead > 0;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
