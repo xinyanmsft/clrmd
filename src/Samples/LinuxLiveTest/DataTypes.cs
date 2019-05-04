@@ -20,4 +20,40 @@ namespace mempeek
         [JsonProperty(Order = 40)]
         public string TypeName { get; set; }
     }
+
+    public class TypeInfo
+    {
+        [JsonProperty(Order = 10)]
+        public ulong MT { get; set; }
+
+        [JsonProperty(Order = 20)]
+        public string Name { get; set; }
+
+        [JsonProperty(Order = 30)]
+        public int Size { get; set; }
+    }
+
+    public class ObjectInfo
+    {
+        [JsonProperty(Order = 10)]
+        public ulong Address { get; set; }
+
+        [JsonProperty(Order = 20)]
+        public string Type { get; set; }
+
+        [JsonProperty(Order = 30)]
+        public int Size { get; set; }
+    }
+
+    public class FieldInfo
+    {
+        [JsonProperty(Order = 10)]
+        public string Name { get; set; }
+
+        [JsonProperty(Order = 20)]
+        public string Type { get; set; }
+
+        [JsonProperty(Order = 30)]
+        public string Value { get; set; }
+    }
 }

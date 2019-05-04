@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CommandLine;
+using mempeek.Commands;
 using Microsoft.Diagnostics.Runtime;
 
 namespace mempeek
@@ -21,7 +22,6 @@ namespace mempeek
                 },
                 errs => 1);
         }
-
 
         private static int Execute(CommandOptions opts)
         {
@@ -65,12 +65,13 @@ namespace mempeek
                         {
                             logger.Log(orderBySizeList);
                         }
-
                         return 0;
                     }
                     else
                     {
-                        throw new NotImplementedException();
+                        CommandContext context = new CommandContext(dataTarget.DataTarget, heap, logger);
+                        CommandInterpreter interpreter = new CommandInterpreter(context);
+                        return interpreter.Run();
                     }
                 }
             }

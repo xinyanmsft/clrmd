@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json;
 
 namespace mempeek
@@ -45,23 +46,9 @@ namespace mempeek
             }
         }
 
-        private void PrettyPrint<T>(T value) where T : class
+        private PropertyInfo[] GetDisplayProperties(Type type)
         {
-            System.Collections.IEnumerable list = value as System.Collections.IEnumerable;
-            if (list == null)
-            {
-                Console.WriteLine(JsonConvert.SerializeObject(value));
-                return;
-            }
-            var enumerator = list.GetEnumerator();
-            if (!enumerator.MoveNext())
-            {
-                // empty list
-                Console.WriteLine();
-                return;
-            }
-            Type type = enumerator.Current.GetType();
-            var properties = type.GetProperties().Where(p =>
+            return type.GetProperties().Where(p =>
             {
                 var ignores = p.GetCustomAttributes(typeof(JsonIgnoreAttribute), inherit: true);
                 return !ignores.Any();
@@ -72,37 +59,68 @@ namespace mempeek
                 {
                     JsonPropertyAttribute jpa = attr as JsonPropertyAttribute;
                     if (jpa != null)
+                    {
                         return jpa.Order;
+                    }
                 }
                 return 999;
             }).ToArray();
+        }
 
-            foreach(var item in list)
+        private void PrettyPrint<T>(T value) where T : class
+        {
+            if (value == null)
             {
-                for (int i = 0; i < properties.Length; i++)
-                {
-                    string s;
-                    var v = properties[i].GetValue(item);
-                    if (v == null)
-                    {
-                        s = "null";
-                    }
-                    else if (v.GetType() == typeof(ulong))
-                    {
-                        // hack: ulong got printed as 64 bit HEX
-                        s = ((ulong)v).ToString("X16");
-                    }
-                    else
-                    {
-                        s = v.ToString();
-                    }
-                    if (i > 0)
-                    {
-                        Console.Write('\t');
-                    }
-                    Console.Write(s);
-                }
                 Console.WriteLine();
+            }
+            System.Collections.IEnumerable list = value as System.Collections.IEnumerable;
+            if (list == null)
+            {
+                var properties = this.GetDisplayProperties(value.GetType());
+                foreach(var p in properties)
+                {
+                    Console.WriteLine($"{p.Name}\t{p.GetValue(value)}");
+                }
+                return;
+            }
+            else
+            {
+                var enumerator = list.GetEnumerator();
+                if (!enumerator.MoveNext())
+                {
+                    // empty list
+                    Console.WriteLine();
+                    return;
+                }
+                Type type = enumerator.Current.GetType();
+                var properties = this.GetDisplayProperties(type);
+                foreach (var item in list)
+                {
+                    for (int i = 0; i < properties.Length; i++)
+                    {
+                        string s;
+                        var v = properties[i].GetValue(item);
+                        if (v == null)
+                        {
+                            s = "null";
+                        }
+                        else if (v.GetType() == typeof(ulong))
+                        {
+                            // hack: ulong got printed as 64 bit HEX
+                            s = ((ulong)v).ToString("X16");
+                        }
+                        else
+                        {
+                            s = v.ToString();
+                        }
+                        if (i > 0)
+                        {
+                            Console.Write('\t');
+                        }
+                        Console.Write(s);
+                    }
+                    Console.WriteLine();
+                }
             }
         }
 
