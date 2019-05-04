@@ -18,9 +18,10 @@ RUN dotnet restore
 COPY ["Samples/LinuxLiveTest/.", "/src/Samples/LinuxLiveTest/"]
 COPY ["Microsoft.Diagnostics.Runtime/.", "/src/Microsoft.Diagnostics.Runtime/"]
 
-RUN dotnet build --no-restore -c $BUILD_CONFIGURATION
-RUN dotnet publish -o /app-mempeek -r linux-x64
-RUN ln -s /app-mempeek/mempeek /usr/bin/mempeek
+RUN dotnet build --no-restore -c $BUILD_CONFIGURATION -o /app-mempeek
+RUN echo "#!/bin/bash\ndotnet /app-mempeek/mempeek.dll $@" > /app-mempeek/mempeek.sh
+RUN chmod +x /app-mempeek/mempeek.sh
+RUN ln -s /app-mempeek/mempeek.sh /usr/bin/mempeek
 WORKDIR /tools
 
 RUN echo "trap : TERM INT; sleep infinity & wait" > /entrypoint.sh
