@@ -31,14 +31,7 @@ namespace mempeek.Commands
                 }
             }
             var orderBySizeList = typeInfo.OrderBy(t => t.Value.TotalSize).Select(t => t.Value);
-            foreach(var t in orderBySizeList)
-            {
-                context.Logger.Log(t);
-                if (context.CancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-            }
+            context.Logger.Log(orderBySizeList);
         }
     }
 }
