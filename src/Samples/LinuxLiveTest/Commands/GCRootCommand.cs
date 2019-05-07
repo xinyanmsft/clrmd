@@ -35,8 +35,13 @@ namespace mempeek.Commands
         {
             GCRoot gcRoot = context.GCRoot;
             context.Heap.StackwalkPolicy = ClrRootStackwalkPolicy.Exact;
-
-            foreach (var rootPath in gcRoot.EnumerateGCRoots(address, context.CancellationToken))
+            var roots = gcRoot.EnumerateGCRoots(address, context.CancellationToken);
+            if (!roots.Any())
+            {
+                Console.WriteLine("No root found for this object.");
+                return;
+            }
+            foreach (var rootPath in roots)
             {
                 StringBuilder s = new StringBuilder();
                 s.Append($"{rootPath.Root} -> ");                
