@@ -40,7 +40,9 @@ namespace mempeek.Commands
             {
                 StringBuilder s = new StringBuilder();
                 s.Append($"{rootPath.Root} -> ");                
-                s.Append(string.Join(" -> ", rootPath.Path.Select(obj => $"{obj.HexAddress} {obj.Type.Name}")));
+                s.Append(string.Join("  ->\n", rootPath.Path.Select(obj => $"{obj.HexAddress} {obj.Type.Name}")));
+                Console.WriteLine(s.ToString());
+                Console.WriteLine();
             }
         }
     }

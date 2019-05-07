@@ -13,8 +13,9 @@ namespace mempeek.Commands
             context.Logger.Log("heapstat:\tshows heap summary");
             context.Logger.Log("dumptype:\tshows type details");
             context.Logger.Log("dumpobj:\tshows object value");
-            context.Logger.Log("gcroot:\tcomputes path to root");
-            context.Logger.Log("cache:\tbuilds GC root cache");
+            context.Logger.Log("gcroot:\t\tcomputes path to root");
+            context.Logger.Log("cache:\t\tbuilds GC root cache");
+            context.Logger.Log("quit:\t\tquit this tool");
         }
     }
 }

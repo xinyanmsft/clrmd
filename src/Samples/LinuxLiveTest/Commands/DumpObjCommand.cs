@@ -43,6 +43,7 @@ namespace mempeek.Commands
             if (obj.Type == null)
             {
                 context.Logger.Log($"{addressStr} is not an object.");
+                return;
             }
             context.Logger.Log(new ObjectInfo()
             {

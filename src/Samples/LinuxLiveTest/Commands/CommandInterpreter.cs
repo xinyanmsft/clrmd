@@ -24,6 +24,7 @@ namespace mempeek.Commands
             Console.CancelKeyPress += OnCancelKeyPress;
             while (true)
             {
+                Console.Write("(mempeek)>  ");
                 string commandArgs = Console.ReadLine();
                 if (string.IsNullOrWhiteSpace(commandArgs))
                 {

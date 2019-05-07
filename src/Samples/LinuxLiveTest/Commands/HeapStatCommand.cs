@@ -30,7 +30,7 @@ namespace mempeek.Commands
                     return;
                 }
             }
-            var orderBySizeList = typeInfo.OrderByDescending(t => t.Value.TotalSize).Select(t => t.Value);
+            var orderBySizeList = typeInfo.OrderBy(t => t.Value.TotalSize).Select(t => t.Value);
             foreach(var t in orderBySizeList)
             {
                 context.Logger.Log(t);

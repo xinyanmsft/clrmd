@@ -30,6 +30,7 @@ namespace Microsoft.Diagnostics.Runtime.Linux
     {
         private List<MemoryMapEntry> _memoryMapEntries;
         private FileStream _memoryStream;
+        private List<uint> _threadIDs = new List<uint>();
 
         public LinuxLiveDataReader(uint processId)
         {
@@ -191,7 +192,8 @@ namespace Microsoft.Diagnostics.Runtime.Linux
 
         public IEnumerable<uint> EnumerateAllThreads()
         {
-            throw new NotImplementedException();
+            this.LoadThreads();
+            return _threadIDs;
         }
 
         public bool VirtualQuery(ulong addr, out VirtualQueryData vq)
@@ -208,9 +210,31 @@ namespace Microsoft.Diagnostics.Runtime.Linux
             return false;
         }
 
-        public bool GetThreadContext(uint threadID, uint contextFlags, uint contextSize, IntPtr context)
+        public unsafe bool GetThreadContext(uint threadID, uint contextFlags, uint contextSize, IntPtr context)
         {
-            throw new NotImplementedException();
+            this.LoadThreads();
+            if (!_threadIDs.Contains(threadID) || contextSize != AMD64Context.Size)
+            {
+                return false;
+            }
+            AMD64Context* ctx = (AMD64Context*)context.ToPointer();
+            ctx->ContextFlags = (int)contextFlags;
+            IntPtr ptr = Marshal.AllocHGlobal(sizeof(RegSetX64));
+            try
+            {
+                ulong ret = ptrace(PTRACE_GETREGS, (int) threadID, IntPtr.Zero, ptr);
+                if (ret != 0)
+                {
+                    Console.WriteLine($"PTRACE_GETREGS returns {ret:x} for {threadID}");
+                }
+                RegSetX64 r = Marshal.PtrToStructure<RegSetX64>(ptr);
+                CopyContext(ctx, ref r);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
+            return true;
         }
 
         public bool GetThreadContext(uint threadID, uint contextFlags, uint contextSize, byte[] context)
@@ -221,6 +245,60 @@ namespace Microsoft.Diagnostics.Runtime.Linux
         internal IEnumerable<string> GetModulesFullPath()
         {
             return _memoryMapEntries.Where(e => !string.IsNullOrEmpty(e.FilePath)).Select(e => e.FilePath).Distinct();
+        }
+
+        private unsafe void CopyContext(AMD64Context* ctx, ref RegSetX64 registerSet)
+        {
+            ctx->R15 = registerSet.R15;
+            ctx->R14 = registerSet.R14;
+            ctx->R13 = registerSet.R13;
+            ctx->R12 = registerSet.R12;
+            ctx->Rbp = registerSet.Rbp;
+            ctx->Rbx = registerSet.Rbx;
+            ctx->R11 = registerSet.R11;
+            ctx->R10 = registerSet.R10;
+            ctx->R9 = registerSet.R9;
+            ctx->R8 = registerSet.R8;
+            ctx->Rax = registerSet.Rax;
+            ctx->Rcx = registerSet.Rcx;
+            ctx->Rdx = registerSet.Rdx;
+            ctx->Rsi = registerSet.Rsi;
+            ctx->Rdi = registerSet.Rdi;
+            ctx->Rip = registerSet.Rip;
+            ctx->Rsp = registerSet.Rsp;
+        }
+
+        private void LoadThreads()
+        {
+            if (!_threadIDs.Any())
+            {
+                string taskDirPath = $"/proc/{this.ProcessId}/task";
+                foreach(var taskDir in Directory.GetDirectories(taskDirPath))
+                {
+                    string dirName = Path.GetFileName(taskDir);
+                    uint taskId;
+                    if (uint.TryParse(dirName, out taskId) && taskId > 0)
+                    {
+                        _threadIDs.Add(taskId);
+                    }
+                }
+                foreach(var tid in _threadIDs)
+                {
+                    if (tid != this.ProcessId)
+                    {
+                        ulong ret = ptrace(PTRACE_ATTACH, (int) tid, IntPtr.Zero, IntPtr.Zero);
+                        if (ret != 0)
+                        {
+                            throw new InvalidOperationException($"ptrace attach failed with 0x{ret:x}. Please ensure SYS_PTRACE capability is enabled. When running inside a Docker container, add 'SYS_PTRACE' to securityContext.capabilities.");
+                        }
+                        int ret2 = wait(IntPtr.Zero);
+                        if (ret2 != tid)
+                        {
+                            throw new InvalidOperationException($"wait failed with {ret2}. is thread {tid} still running?");
+                        }
+                    }
+                }
+            }
         }
 
         private void OpenMemFile()
@@ -385,6 +463,16 @@ namespace Microsoft.Diagnostics.Runtime.Linux
             int p = permission[3] != '-' ? 1 : 0;   // 1: private
             return r + w + x + p;
         }
+
+
+        [DllImport("libc", SetLastError = true)]
+        private static extern ulong ptrace(uint command, int pid, IntPtr addr, IntPtr data);
+
+        [DllImport("libc", SetLastError = true)]
+        private static extern int wait(IntPtr status);
+
+        private const uint PTRACE_ATTACH = 16;
+        private const uint PTRACE_GETREGS = 12;
     }
 
     internal class MemoryMapEntry

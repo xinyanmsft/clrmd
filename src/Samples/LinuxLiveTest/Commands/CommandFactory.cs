@@ -47,6 +47,7 @@ namespace mempeek.Commands
                     return new HelpCommand();
 
                 case "quit":
+                case "exit":
                     return null;
 
                 case "cache":

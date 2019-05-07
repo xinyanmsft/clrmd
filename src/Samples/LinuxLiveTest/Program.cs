@@ -38,7 +38,6 @@ namespace mempeek
                         // GC is actively collecting and can't walk the heap at this point. This should happen rare. 
                         logger.Log("The GC heap is invalid at this point (heap.CanWalkHeap == false). Please retry later.");
                     }
-
                     if (opts.TopByCount > 0 || opts.TopBySize > 0)
                     {
                         Dictionary<string, HeapTypeInfo> typeInfo = new Dictionary<string, HeapTypeInfo>();

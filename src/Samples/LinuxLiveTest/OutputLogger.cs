@@ -79,7 +79,7 @@ namespace mempeek
                 var properties = this.GetDisplayProperties(value.GetType());
                 foreach(var p in properties)
                 {
-                    Console.WriteLine($"{p.Name}\t{p.GetValue(value)}");
+                    Console.WriteLine($"{p.Name}\t{this.GetPropertyStringValue(p, value)}");
                 }
                 return;
             }
@@ -98,29 +98,31 @@ namespace mempeek
                 {
                     for (int i = 0; i < properties.Length; i++)
                     {
-                        string s;
-                        var v = properties[i].GetValue(item);
-                        if (v == null)
-                        {
-                            s = "null";
-                        }
-                        else if (v.GetType() == typeof(ulong))
-                        {
-                            // hack: ulong got printed as 64 bit HEX
-                            s = ((ulong)v).ToString("X16");
-                        }
-                        else
-                        {
-                            s = v.ToString();
-                        }
                         if (i > 0)
                         {
                             Console.Write('\t');
                         }
-                        Console.Write(s);
+                        Console.Write(this.GetPropertyStringValue(properties[i], item));
                     }
                     Console.WriteLine();
                 }
+            }
+        }
+
+        private string GetPropertyStringValue(PropertyInfo propertyInfo, object value)
+        {
+            var v = propertyInfo.GetValue(value);
+            if (v == null)
+            {
+                return "null";
+            }
+            else if (propertyInfo.PropertyType == typeof(ulong))
+            {
+                return ((ulong)v).ToString("X16");
+            }
+            else
+            {
+                return v.ToString();
             }
         }
 
