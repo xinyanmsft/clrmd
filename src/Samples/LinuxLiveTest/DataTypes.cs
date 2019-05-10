@@ -33,6 +33,15 @@ namespace mempeek
         public int Size { get; set; }
     }
 
+    public class ObjectInstanceInfo
+    {
+        [JsonProperty(Order = 10)]
+        public ulong Address { get; set; }
+
+        [JsonProperty(Order = 30)]
+        public int Size { get; set; }
+    }
+
     public class ObjectInfo
     {
         [JsonProperty(Order = 10)]

@@ -55,7 +55,11 @@ namespace mempeek.Commands
             {
                 if (obj.Type.Name == type.Name)
                 {
-                    context.Logger.Log(obj.HexAddress);
+                    context.Logger.Log(new ObjectInstanceInfo()
+                    {
+                        Address = obj.Address,
+                        Size = (int)obj.Size
+                    });
                 }
                 if (context.CancellationToken.IsCancellationRequested)
                 {

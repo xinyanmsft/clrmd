@@ -18,12 +18,24 @@ RUN dotnet restore
 COPY ["Samples/LinuxLiveTest/.", "/src/Samples/LinuxLiveTest/"]
 COPY ["Microsoft.Diagnostics.Runtime/.", "/src/Microsoft.Diagnostics.Runtime/"]
 
-RUN dotnet build --no-restore -c $BUILD_CONFIGURATION -o /app-mempeek
-RUN echo "#!/bin/bash\ndotnet /app-mempeek/mempeek.dll $@" > /app-mempeek/mempeek.sh
+RUN dotnet publish -c $BUILD_CONFIGURATION -o /app-mempeek
+
+# Second stage build
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2-alpine3.9
+
+# Upgrading apk and adding basic tools
+RUN apk update \
+    && apk upgrade \
+    && apk add --update --no-cache bash \
+    && apk add --update curl \
+    && apk add --update --no-cache openssl
+
+COPY --from=0 /app-mempeek /app-mempeek
+
+RUN echo -e '#!/bin/bash\ndotnet /app-mempeek/mempeek.dll $@' > /app-mempeek/mempeek.sh
 RUN chmod +x /app-mempeek/mempeek.sh
 RUN ln -s /app-mempeek/mempeek.sh /usr/bin/mempeek
-WORKDIR /tools
+WORKDIR /app-mempeek
 
-RUN echo "trap : TERM INT; sleep infinity & wait" > /entrypoint.sh
-
+RUN echo "trap : TERM INT; while true; do slee 10; done & wait" > /entrypoint.sh
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]

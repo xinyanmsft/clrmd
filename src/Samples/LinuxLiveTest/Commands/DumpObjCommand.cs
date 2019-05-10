@@ -58,17 +58,22 @@ namespace mempeek.Commands
                 {
                     Name = f.Name,
                     Type = f.Type.Name,
-                    Value = GetValueString(f.GetValue(address))
+                    Value = GetValueString(f, address)
                 });
             }
             context.Logger.Log(fields);
         }
 
-        private string GetValueString(object v)
+        private string GetValueString(ClrInstanceField f, ulong address)
         {
+            object v = f.GetValue(address);
             if (v == null)
             {
                 return "null";
+            }
+            else if (v is ulong)
+            {
+                return ((ulong)v).ToString("X16");
             }
             else
             {
