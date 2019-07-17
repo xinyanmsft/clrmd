@@ -37,5 +37,5 @@ RUN chmod +x /app-mempeek/mempeek.sh
 RUN ln -s /app-mempeek/mempeek.sh /usr/bin/mempeek
 WORKDIR /app-mempeek
 
-RUN echo "trap : TERM INT; while true; do slee 10; done & wait" > /entrypoint.sh
+RUN echo "trap : TERM INT; while true; do sleep 10; done & wait" > /entrypoint.sh
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
